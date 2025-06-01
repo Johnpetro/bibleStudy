@@ -14,11 +14,15 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     private TextInputEditText emailInput;
     private MaterialButton resetButton;
     private TextView backToLoginLink;
+    private DatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
+
+        // Initialize database helper
+        databaseHelper = new DatabaseHelper(this);
 
         // Initialize views
         emailInput = findViewById(R.id.email_input);
@@ -28,7 +32,6 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         // Set click listeners
         resetButton.setOnClickListener(v -> attemptPasswordReset());
         
-        // Back to login click listener
         backToLoginLink.setOnClickListener(v -> {
             finish(); // Go back to login activity
         });
@@ -43,9 +46,27 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             return;
         }
 
-        // For demo purposes, just show success message
+        // Check if email exists in database
+        if (!databaseHelper.checkEmail(email)) {
+            emailInput.setError("Email not found");
+            return;
+        }
+
         // In a real app, you would send a password reset email
-        Toast.makeText(this, "Password reset link sent to " + email, Toast.LENGTH_LONG).show();
-        finish(); // Go back to login activity
+        // For this example, we'll just show a success message
+        
+        // Get username associated with email
+        String username = databaseHelper.getUsernameByEmail(email);
+        
+        // For demo purposes, we'll reset the password to a default value
+        String newPassword = "reset123";
+        int result = databaseHelper.updatePassword(email, newPassword);
+        
+        if (result > 0) {
+            Toast.makeText(this, "Password reset for " + username + ". New password: " + newPassword, Toast.LENGTH_LONG).show();
+            finish(); // Go back to login activity
+        } else {
+            Toast.makeText(this, "Password reset failed", Toast.LENGTH_SHORT).show();
+        }
     }
 }

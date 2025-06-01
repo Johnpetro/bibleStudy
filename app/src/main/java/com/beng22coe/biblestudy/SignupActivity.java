@@ -18,11 +18,15 @@ public class SignupActivity extends AppCompatActivity {
     private TextInputEditText confirmPasswordInput;
     private MaterialButton signupButton;
     private TextView loginLink;
+    private DatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+
+        // Initialize database helper
+        databaseHelper = new DatabaseHelper(this);
 
         // Initialize views
         usernameInput = findViewById(R.id.username_input);
@@ -67,9 +71,27 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        // For demo purposes, just show success and go to login
-        // In a real app, you would register with a server
-        Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show();
-        finish(); // Go back to login activity
+        // Check if username already exists
+        if (databaseHelper.checkUsername(username)) {
+            usernameInput.setError("Username already exists");
+            return;
+        }
+
+        // Check if email already exists
+        if (databaseHelper.checkEmail(email)) {
+            emailInput.setError("Email already exists");
+            return;
+        }
+
+        // Add user to database
+        long result = databaseHelper.addUser(username, email, password);
+        
+        if (result > 0) {
+            Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show();
+            // Return to login screen
+            finish();
+        } else {
+            Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
+        }
     }
 }
